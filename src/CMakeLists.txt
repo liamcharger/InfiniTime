@@ -386,6 +386,7 @@ list(APPEND SOURCE_FILES
         displayapp/screens/Twos.cpp
         displayapp/screens/HeartRate.cpp
         displayapp/screens/FlashLight.cpp
+        displayapp/screens/Sleep.cpp
         displayapp/screens/List.cpp
         displayapp/screens/CheckboxList.cpp
         displayapp/screens/BatteryInfo.cpp
@@ -595,6 +596,7 @@ set(INCLUDE_FILES
         displayapp/screens/InfiniPaint.h
         displayapp/screens/StopWatch.h
         displayapp/screens/Paddle.h
+        displayapp/screens/Sleep.h
         displayapp/screens/BatteryIcon.h
         displayapp/screens/BleIcon.h
         displayapp/screens/NotificationIcon.h
