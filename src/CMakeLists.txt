@@ -453,6 +453,7 @@ list(APPEND SOURCE_FILES
         components/ble/DfuService.cpp
         components/ble/CurrentTimeService.cpp
         components/ble/AlertNotificationService.cpp
+        components/ble/AppleNotificationCenterClient.cpp
         components/ble/MusicService.cpp
         components/ble/SimpleWeatherService.cpp
         components/ble/NavigationService.cpp
@@ -523,6 +524,7 @@ list(APPEND RECOVERY_SOURCE_FILES
         components/ble/DfuService.cpp
         components/ble/CurrentTimeService.cpp
         components/ble/AlertNotificationService.cpp
+        components/ble/AppleNotificationCenterClient.cpp
         components/ble/MusicService.cpp
         components/ble/SimpleWeatherService.cpp
         components/ble/BatteryInformationService.cpp
@@ -798,7 +800,7 @@ add_definitions(-DTARGET_DEVICE_${TARGET_DEVICE})
 add_definitions(-DTARGET_DEVICE_NAME="${TARGET_DEVICE}")
 if(TARGET_DEVICE STREQUAL "PINETIME")
   add_definitions(-DDRIVER_PINMAP_PINETIME)
-  add_definitions(-DCLOCK_CONFIG_LF_SRC=1) # XTAL
+  add_definitions(-DCLOCK_CONFIG_LF_SRC=1)
 elseif(TARGET_DEVICE STREQUAL "MOY_TFK5") # P8a
   add_definitions(-DDRIVER_PINMAP_P8)
   add_definitions(-DCLOCK_CONFIG_LF_SRC=1) # XTAL

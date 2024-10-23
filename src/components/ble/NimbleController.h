@@ -8,6 +8,7 @@
 #undef max
 #undef min
 #include "components/ble/AlertNotificationClient.h"
+#include "components/ble/AppleNotificationCenterClient.h"
 #include "components/ble/AlertNotificationService.h"
 #include "components/ble/BatteryInformationService.h"
 #include "components/ble/CurrentTimeClient.h"
@@ -97,6 +98,7 @@ namespace Pinetime {
       CurrentTimeClient currentTimeClient;
       AlertNotificationService anService;
       AlertNotificationClient alertNotificationClient;
+      AppleNotificationCenterClient appleNotificationCenterClient;
       CurrentTimeService currentTimeService;
       MusicService musicService;
       SimpleWeatherService weatherService;
