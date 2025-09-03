@@ -340,7 +340,6 @@ void SystemTask::Work() {
           batteryController.ReadPowerState();
           nimbleController.NotifyBatteryCharging(batteryController.IsCharging());
           GoToRunning();
-          displayApp.PushMessage(Applications::Display::Messages::OnChargingEvent);
           break;
         case Messages::MeasureBatteryTimerExpired:
           batteryController.MeasureVoltage();
