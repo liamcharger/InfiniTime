@@ -46,8 +46,8 @@ inline void lv_img_set_src_arr(lv_obj_t* img, const lv_img_dsc_t* src_img) {
  *
  * TODO: Investigate Apple Media Service and AVRCPv1.6 support for seamless integration
  */
-Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble& bleController, Controllers::DateTime& dateTimeController)
-  : musicService(music), bleController {bleController}, dateTimeController {dateTimeController} {
+Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble& bleController)
+  : musicService(music), bleController {bleController} {
 
   lv_obj_t* label;
 
@@ -203,18 +203,18 @@ void Music::RefreshTrackInfo(bool force) {
     lv_label_set_text_static(txtPlayPause, playing ? Symbols::pause : Symbols::play);
   }
 
-  if (force || artist != musicService.getArtist()) {
-    artist = musicService.getArtist();
-    lv_label_set_text(txtArtist, artist.data());
+  artist = musicService.getArtist();
+  if (force || artist.IsUpdated()) {
+    lv_label_set_text(txtArtist, artist.Get().data());
   }
 
-  if (force || track != musicService.getTrack()) {
-    track = musicService.getTrack();
-    lv_label_set_text(txtTrack, track.data());
+  track = musicService.getTrack();
+  if (force || track.IsUpdated()) {
+    lv_label_set_text(txtTrack, track.Get().data());
   }
 
-  if (force || album != musicService.getAlbum()) {
-    album = musicService.getAlbum();
+  album = musicService.getAlbum();
+  if (force || album.IsUpdated()) {
   }
 
   if (force || currentPosition != musicService.getProgress()) {
@@ -230,8 +230,9 @@ void Music::RefreshTrackInfo(bool force) {
 
 void Music::UpdateLength() {
   int remaining = totalLength - currentPosition;
-  if (remaining < 0)
+  if (remaining < 0) {
     remaining = 0;
+  }
 
   if (totalLength > (99 * 60 * 60)) {
     lv_label_set_text_static(txtCurrentPosition, "Inf");
