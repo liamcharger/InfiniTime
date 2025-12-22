@@ -50,7 +50,7 @@ namespace Pinetime {
 
         void UpdateLength();
 
-        void RefreshTrackInfo(bool force);
+        void RefreshTrackInfo();
 
         void SetDisconnectedUI();
 

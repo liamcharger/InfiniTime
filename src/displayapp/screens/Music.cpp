@@ -146,8 +146,6 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
   lv_obj_set_width(txtTrackDuration, LV_HOR_RES);
   lv_obj_set_style_local_text_color(txtTrackDuration, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, Colors::lightGray);
 
-  musicService.event(Controllers::MusicService::EVENT_MUSIC_OPEN);
-
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
 }
 
@@ -161,22 +159,21 @@ void Music::Refresh() {
   bleState = bleController.IsConnected();
 
   if (bleState.IsUpdated()) {
-    if (!bleState.Get()) {
-      // just disconnected
+    const bool connected = bleState.Get();
+
+    if (!connected) {
       SetDisconnectedUI();
       return;
     } else {
-      // just connected
       musicService.event(Controllers::MusicService::EVENT_MUSIC_OPEN);
       SetConnectedUI();
-      RefreshTrackInfo(true);
+      RefreshTrackInfo();
       return;
     }
   }
 
-  // still connected, no state change
   if (bleState.Get()) {
-    RefreshTrackInfo(false);
+    RefreshTrackInfo();
   }
 }
 
@@ -192,6 +189,10 @@ void Music::SetDisconnectedUI() {
   lv_label_set_text_static(txtTrackDuration, "--:--");
   lv_bar_set_range(barTrackDuration, 0, 1000);
   lv_bar_set_value(barTrackDuration, 0, LV_ANIM_OFF);
+  // empty these so they are successfully updated on reconnect because of how DirtyValue works
+  artist = "";
+  track = "";
+  album = "";
 }
 
 void Music::SetConnectedUI() {
@@ -202,32 +203,32 @@ void Music::SetConnectedUI() {
   lv_obj_set_style_local_bg_color(btnVolUp, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
 }
 
-void Music::RefreshTrackInfo(bool force) {
-  if (force || playing != musicService.isPlaying()) {
+void Music::RefreshTrackInfo() {
+  if (playing != musicService.isPlaying()) {
     playing = musicService.isPlaying();
     lv_label_set_text_static(txtPlayPause, playing ? Symbols::pause : Symbols::play);
   }
 
   artist = musicService.getArtist();
-  if (force || artist.IsUpdated()) {
+  if (artist.IsUpdated()) {
     lv_label_set_text(txtArtist, artist.Get().data());
   }
 
   track = musicService.getTrack();
-  if (force || track.IsUpdated()) {
+  if (track.IsUpdated()) {
     lv_label_set_text(txtTrack, track.Get().data());
   }
 
   album = musicService.getAlbum();
-  if (force || album.IsUpdated()) {
+  if (album.IsUpdated()) {
   }
 
-  if (force || currentPosition != musicService.getProgress()) {
+  if (currentPosition != musicService.getProgress()) {
     currentPosition = musicService.getProgress();
     UpdateLength();
   }
 
-  if (force || totalLength != musicService.getTrackLength()) {
+  if (totalLength != musicService.getTrackLength()) {
     totalLength = musicService.getTrackLength();
     UpdateLength();
   }
