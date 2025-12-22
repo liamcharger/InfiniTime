@@ -159,19 +159,24 @@ Music::~Music() {
 
 void Music::Refresh() {
   bleState = bleController.IsConnected();
-  if (!bleState.Get()) {
-    SetDisconnectedUI();
-    lastConnected = false;
-  } else {
-    if (!lastConnected) {
-      // just reconnected
+
+  if (bleState.IsUpdated()) {
+    if (!bleState.Get()) {
+      // just disconnected
+      SetDisconnectedUI();
+      return;
+    } else {
+      // just connected
       musicService.event(Controllers::MusicService::EVENT_MUSIC_OPEN);
       SetConnectedUI();
       RefreshTrackInfo(true);
-    } else {
-      RefreshTrackInfo(false);
+      return;
     }
-    lastConnected = true;
+  }
+
+  // still connected, no state change
+  if (bleState.Get()) {
+    RefreshTrackInfo(false);
   }
 }
 

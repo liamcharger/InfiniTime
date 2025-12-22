@@ -86,8 +86,6 @@ namespace Pinetime {
 
         bool playing;
 
-        bool lastConnected = false;
-
         lv_task_t* taskRefresh;
 
         Utility::DirtyValue<bool> bleState {};
