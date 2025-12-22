@@ -65,24 +65,6 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp",
-        "charconv": "cpp",
-        "compare": "cpp",
-        "concepts": "cpp",
-        "condition_variable": "cpp",
-        "cstring": "cpp",
-        "list": "cpp",
-        "netfwd": "cpp",
-        "iomanip": "cpp",
-        "mutex": "cpp",
-        "numbers": "cpp",
-        "semaphore": "cpp",
-        "span": "cpp",
-        "stop_token": "cpp",
-        "thread": "cpp",
-        "cfenv": "cpp",
-        "variant": "cpp",
-        "format": "cpp",
-        "__nullptr": "cpp"
+        "typeinfo": "cpp"
     }
 }
