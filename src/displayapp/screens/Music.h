@@ -65,8 +65,6 @@ namespace Pinetime {
         lv_obj_t* txtTrack;
         lv_obj_t* txtPlayPause;
 
-        lv_obj_t* imgDisc;
-        lv_obj_t* imgDiscAnim;
         lv_obj_t* txtTrackDuration;
         lv_obj_t* txtCurrentPosition;
         lv_obj_t* barTrackDuration;
@@ -77,7 +75,6 @@ namespace Pinetime {
         const Controllers::Ble& bleController;
 
         Utility::DirtyValue<std::string> artist;
-        Utility::DirtyValue<std::string> album;
         Utility::DirtyValue<std::string> track;
 
         /** Total length in seconds */
@@ -90,7 +87,6 @@ namespace Pinetime {
         lv_task_t* taskRefresh;
 
         Utility::DirtyValue<bool> bleState {};
-        Utility::DirtyValue<bool> bleRadioEnabled {};
 
         /** Watchapp */
       };
