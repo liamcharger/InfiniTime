@@ -61,9 +61,19 @@ namespace Pinetime {
         lv_obj_t* btnNext;
         lv_obj_t* btnVolDown;
         lv_obj_t* btnVolUp;
+
+        lv_obj_t* buttons[5];
+
+        lv_obj_t* txtBtnPrev;
+        lv_obj_t* txtPlayPause;
+        lv_obj_t* txtBtnNext;
+        lv_obj_t* txtVolDown;
+        lv_obj_t* txtVolUp;
+
+        lv_obj_t* controlLabels[5];
+
         lv_obj_t* txtArtist;
         lv_obj_t* txtTrack;
-        lv_obj_t* txtPlayPause;
 
         lv_obj_t* txtTrackDuration;
         lv_obj_t* txtCurrentPosition;

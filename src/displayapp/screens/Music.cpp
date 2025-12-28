@@ -49,8 +49,6 @@ inline void lv_img_set_src_arr(lv_obj_t* img, const lv_img_dsc_t* src_img) {
 Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble& bleController)
   : musicService(music), bleController {bleController} {
 
-  lv_obj_t* label;
-
   lv_style_init(&btn_style);
   lv_style_set_radius(&btn_style, LV_STATE_DEFAULT, 20);
   lv_style_set_bg_color(&btn_style, LV_STATE_DEFAULT, Colors::bgAlt);
@@ -61,8 +59,8 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
   lv_obj_set_size(btnVolDown, 117, 60);
   lv_obj_align(btnVolDown, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
   lv_obj_add_style(btnVolDown, LV_STATE_DEFAULT, &btn_style);
-  label = lv_label_create(btnVolDown, nullptr);
-  lv_label_set_text_static(label, Symbols::volumDown);
+  txtVolDown = lv_label_create(btnVolDown, nullptr);
+  lv_label_set_text_static(txtVolDown, Symbols::volumDown);
 
   btnVolUp = lv_btn_create(lv_scr_act(), nullptr);
   btnVolUp->user_data = this;
@@ -70,8 +68,8 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
   lv_obj_set_size(btnVolUp, 117, 60);
   lv_obj_align(btnVolUp, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
   lv_obj_add_style(btnVolUp, LV_STATE_DEFAULT, &btn_style);
-  label = lv_label_create(btnVolUp, nullptr);
-  lv_label_set_text_static(label, Symbols::volumUp);
+  txtVolUp = lv_label_create(btnVolUp, nullptr);
+  lv_label_set_text_static(txtVolUp, Symbols::volumUp);
 
   btnPrev = lv_btn_create(lv_scr_act(), nullptr);
   btnPrev->user_data = this;
@@ -79,8 +77,8 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
   lv_obj_set_size(btnPrev, 76, 76);
   lv_obj_align(btnPrev, nullptr, LV_ALIGN_IN_BOTTOM_LEFT, 3, 0);
   lv_obj_add_style(btnPrev, LV_STATE_DEFAULT, &btn_style);
-  label = lv_label_create(btnPrev, nullptr);
-  lv_label_set_text_static(label, Symbols::stepBackward);
+  txtBtnPrev = lv_label_create(btnPrev, nullptr);
+  lv_label_set_text_static(txtBtnPrev, Symbols::stepBackward);
 
   btnNext = lv_btn_create(lv_scr_act(), nullptr);
   btnNext->user_data = this;
@@ -88,8 +86,8 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
   lv_obj_set_size(btnNext, 76, 76);
   lv_obj_align(btnNext, nullptr, LV_ALIGN_IN_BOTTOM_RIGHT, -3, 0);
   lv_obj_add_style(btnNext, LV_STATE_DEFAULT, &btn_style);
-  label = lv_label_create(btnNext, nullptr);
-  lv_label_set_text_static(label, Symbols::stepForward);
+  txtBtnNext = lv_label_create(btnNext, nullptr);
+  lv_label_set_text_static(txtBtnNext, Symbols::stepForward);
 
   btnPlayPause = lv_btn_create(lv_scr_act(), nullptr);
   btnPlayPause->user_data = this;
@@ -99,6 +97,18 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
   lv_obj_add_style(btnPlayPause, LV_STATE_DEFAULT, &btn_style);
   txtPlayPause = lv_label_create(btnPlayPause, nullptr);
   lv_label_set_text_static(txtPlayPause, Symbols::play);
+
+  buttons[0] = btnPrev;
+  buttons[1] = btnPlayPause;
+  buttons[2] = btnNext;
+  buttons[3] = btnVolDown;
+  buttons[4] = btnVolUp;
+
+  controlLabels[0] = txtBtnPrev;
+  controlLabels[1] = txtPlayPause;
+  controlLabels[2] = txtBtnNext;
+  controlLabels[3] = txtVolDown;
+  controlLabels[4] = txtVolUp;
 
   // I'm using the txtTrack label as the top anchor for the whole lot
   // of song, artist, progress bar and duration text (0:00 and -0:00) so
@@ -180,26 +190,32 @@ void Music::Refresh() {
 void Music::SetDisconnectedUI() {
   lv_label_set_text_static(txtArtist, "Disconnected");
   lv_label_set_text_static(txtTrack, "");
-  lv_obj_set_style_local_bg_color(btnPrev, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgDark);
-  lv_obj_set_style_local_bg_color(btnPlayPause, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgDark);
-  lv_obj_set_style_local_bg_color(btnNext, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgDark);
-  lv_obj_set_style_local_bg_color(btnVolDown, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgDark);
-  lv_obj_set_style_local_bg_color(btnVolUp, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgDark);
+
+  for (auto btn : buttons) {
+    lv_obj_set_style_local_bg_color(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgDark);
+  }
+
+  for (auto lbl : controlLabels) {
+    lv_obj_set_style_local_text_color(lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
+  }
+
   lv_label_set_text_static(txtCurrentPosition, "--:--");
   lv_label_set_text_static(txtTrackDuration, "--:--");
   lv_bar_set_range(barTrackDuration, 0, 1000);
   lv_bar_set_value(barTrackDuration, 0, LV_ANIM_OFF);
-  // empty these so they are successfully updated on reconnect because of how DirtyValue works
+
   artist = "";
   track = "";
 }
 
 void Music::SetConnectedUI() {
-  lv_obj_set_style_local_bg_color(btnPrev, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
-  lv_obj_set_style_local_bg_color(btnPlayPause, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
-  lv_obj_set_style_local_bg_color(btnNext, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
-  lv_obj_set_style_local_bg_color(btnVolDown, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
-  lv_obj_set_style_local_bg_color(btnVolUp, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
+  for (auto btn : buttons) {
+    lv_obj_set_style_local_bg_color(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
+  }
+
+  for (auto lbl : controlLabels) {
+    lv_obj_set_style_local_text_color(lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
+  }
 }
 
 void Music::RefreshTrackInfo() {
