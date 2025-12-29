@@ -25,20 +25,22 @@
 
 using namespace Pinetime::Applications::Screens;
 
-static void event_handler(lv_obj_t* obj, lv_event_t event) {
-  Music* screen = static_cast<Music*>(obj->user_data);
-  screen->OnObjectEvent(obj, event);
-}
+namespace {
+  void EventHandler(lv_obj_t* obj, lv_event_t event) {
+    auto* screen = static_cast<Music*>(obj->user_data);
+    screen->OnObjectEvent(obj, event);
+  }
 
-/**
- * Set the pixel array to display by the image
- * This just calls lv_img_set_src but adds type safety
- *
- * @param img pointer to an image object
- * @param data the image array
- */
-inline void lv_img_set_src_arr(lv_obj_t* img, const lv_img_dsc_t* src_img) {
-  lv_img_set_src(img, src_img);
+  /**
+  * Set the pixel array to display by the image
+  * This just calls lv_img_set_src but adds type safety
+  *
+  * @param img pointer to an image object
+  * @param data the image array
+  */
+  inline void lv_img_set_src_arr(lv_obj_t* img, const lv_img_dsc_t* src_img) {
+    lv_img_set_src(img, src_img);
+  }
 }
 
 /**
@@ -55,7 +57,7 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
 
   btnVolDown = lv_btn_create(lv_scr_act(), nullptr);
   btnVolDown->user_data = this;
-  lv_obj_set_event_cb(btnVolDown, event_handler);
+  lv_obj_set_event_cb(btnVolDown, EventHandler);
   lv_obj_set_size(btnVolDown, 117, 60);
   lv_obj_align(btnVolDown, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 0);
   lv_obj_add_style(btnVolDown, LV_STATE_DEFAULT, &btn_style);
@@ -64,7 +66,7 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
 
   btnVolUp = lv_btn_create(lv_scr_act(), nullptr);
   btnVolUp->user_data = this;
-  lv_obj_set_event_cb(btnVolUp, event_handler);
+  lv_obj_set_event_cb(btnVolUp, EventHandler);
   lv_obj_set_size(btnVolUp, 117, 60);
   lv_obj_align(btnVolUp, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 0);
   lv_obj_add_style(btnVolUp, LV_STATE_DEFAULT, &btn_style);
@@ -73,7 +75,7 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
 
   btnPrev = lv_btn_create(lv_scr_act(), nullptr);
   btnPrev->user_data = this;
-  lv_obj_set_event_cb(btnPrev, event_handler);
+  lv_obj_set_event_cb(btnPrev, EventHandler);
   lv_obj_set_size(btnPrev, 76, 76);
   lv_obj_align(btnPrev, nullptr, LV_ALIGN_IN_BOTTOM_LEFT, 3, 0);
   lv_obj_add_style(btnPrev, LV_STATE_DEFAULT, &btn_style);
@@ -82,7 +84,7 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
 
   btnNext = lv_btn_create(lv_scr_act(), nullptr);
   btnNext->user_data = this;
-  lv_obj_set_event_cb(btnNext, event_handler);
+  lv_obj_set_event_cb(btnNext, EventHandler);
   lv_obj_set_size(btnNext, 76, 76);
   lv_obj_align(btnNext, nullptr, LV_ALIGN_IN_BOTTOM_RIGHT, -3, 0);
   lv_obj_add_style(btnNext, LV_STATE_DEFAULT, &btn_style);
@@ -91,24 +93,12 @@ Music::Music(Pinetime::Controllers::MusicService& music, const Controllers::Ble&
 
   btnPlayPause = lv_btn_create(lv_scr_act(), nullptr);
   btnPlayPause->user_data = this;
-  lv_obj_set_event_cb(btnPlayPause, event_handler);
+  lv_obj_set_event_cb(btnPlayPause, EventHandler);
   lv_obj_set_size(btnPlayPause, 76, 76);
   lv_obj_align(btnPlayPause, nullptr, LV_ALIGN_IN_BOTTOM_MID, 0, 0);
   lv_obj_add_style(btnPlayPause, LV_STATE_DEFAULT, &btn_style);
   txtPlayPause = lv_label_create(btnPlayPause, nullptr);
   lv_label_set_text_static(txtPlayPause, Symbols::play);
-
-  buttons[0] = btnPrev;
-  buttons[1] = btnPlayPause;
-  buttons[2] = btnNext;
-  buttons[3] = btnVolDown;
-  buttons[4] = btnVolUp;
-
-  controlLabels[0] = txtBtnPrev;
-  controlLabels[1] = txtPlayPause;
-  controlLabels[2] = txtBtnNext;
-  controlLabels[3] = txtVolDown;
-  controlLabels[4] = txtVolUp;
 
   // I'm using the txtTrack label as the top anchor for the whole lot
   // of song, artist, progress bar and duration text (0:00 and -0:00) so
@@ -174,12 +164,11 @@ void Music::Refresh() {
     if (!connected) {
       SetDisconnectedUI();
       return;
-    } else {
-      musicService.event(Controllers::MusicService::EVENT_MUSIC_OPEN);
-      SetConnectedUI();
-      RefreshTrackInfo();
-      return;
     }
+    musicService.event(Controllers::MusicService::EVENT_MUSIC_OPEN);
+    SetConnectedUI();
+    RefreshTrackInfo();
+    return;
   }
 
   if (bleState.Get()) {
@@ -191,11 +180,11 @@ void Music::SetDisconnectedUI() {
   lv_label_set_text_static(txtArtist, "Disconnected");
   lv_label_set_text_static(txtTrack, "");
 
-  for (auto btn : buttons) {
+  for (auto* btn : GetButtons()) {
     lv_obj_set_style_local_bg_color(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgDark);
   }
 
-  for (auto lbl : controlLabels) {
+  for (auto* lbl : GetButtonLabels()) {
     lv_obj_set_style_local_text_color(lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
   }
 
@@ -209,11 +198,11 @@ void Music::SetDisconnectedUI() {
 }
 
 void Music::SetConnectedUI() {
-  for (auto btn : buttons) {
+  for (auto* btn : GetButtons()) {
     lv_obj_set_style_local_bg_color(btn, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, Colors::bgAlt);
   }
 
-  for (auto lbl : controlLabels) {
+  for (auto* lbl : GetButtonLabels()) {
     lv_obj_set_style_local_text_color(lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
   }
 }
@@ -246,10 +235,7 @@ void Music::RefreshTrackInfo() {
 }
 
 void Music::UpdateLength() {
-  int remaining = totalLength - currentPosition;
-  if (remaining < 0) {
-    remaining = 0;
-  }
+  int remaining = std::max(totalLength - currentPosition, 0);
 
   if (totalLength > (99 * 60 * 60)) {
     lv_label_set_text_static(txtCurrentPosition, "Inf");
@@ -257,6 +243,9 @@ void Music::UpdateLength() {
   } else if (totalLength > (99 * 60)) {
     lv_label_set_text_fmt(txtCurrentPosition, "%d:%02d", (currentPosition / (60 * 60)) % 100, ((currentPosition % (60 * 60)) / 60) % 100);
     lv_label_set_text_fmt(txtTrackDuration, "-%d:%02d", (remaining / (60 * 60)) % 100, ((remaining % (60 * 60)) / 60) % 100);
+    // These conversions are narrowing: lv_bar_set_range accepts int16_t args
+    // resolve by normalising?
+    // same for else branch below
     lv_bar_set_range(barTrackDuration, 0, totalLength > 0 ? totalLength : 1);
     lv_bar_set_value(barTrackDuration, currentPosition, LV_ANIM_OFF);
   } else {
@@ -276,18 +265,14 @@ void Music::OnObjectEvent(lv_obj_t* obj, lv_event_t event) {
     } else if (obj == btnPrev) {
       musicService.event(Controllers::MusicService::EVENT_MUSIC_PREV);
     } else if (obj == btnPlayPause) {
-      if (playing == Pinetime::Controllers::MusicService::MusicStatus::Playing) {
+      if (playing) {
         musicService.event(Controllers::MusicService::EVENT_MUSIC_PAUSE);
-
-        // Let's assume it stops playing instantly
-        playing = Controllers::MusicService::NotPlaying;
       } else {
         musicService.event(Controllers::MusicService::EVENT_MUSIC_PLAY);
-
-        // Let's assume it starts playing instantly
-        // TODO: In the future should check for BT connection for better UX
-        playing = Controllers::MusicService::Playing;
       }
+      // Let's assume it stops/starts playing instantly
+      // TODO: In the future should check for BT connection for better UX
+      playing = !playing;
     } else if (obj == btnNext) {
       musicService.event(Controllers::MusicService::EVENT_MUSIC_NEXT);
     }

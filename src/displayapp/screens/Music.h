@@ -19,9 +19,9 @@
 
 #include <FreeRTOS.h>
 #include <lvgl/src/lv_core/lv_obj.h>
+#include <array>
 #include <string>
 #include "displayapp/screens/Screen.h"
-#include "displayapp/widgets/PageIndicator.h"
 #include "displayapp/apps/Apps.h"
 #include "displayapp/Controllers.h"
 #include "Symbols.h"
@@ -62,7 +62,9 @@ namespace Pinetime {
         lv_obj_t* btnVolDown;
         lv_obj_t* btnVolUp;
 
-        lv_obj_t* buttons[5];
+        std::array<lv_obj_t*, 5> GetButtons() {
+          return {btnPrev, btnPlayPause, btnNext, btnVolDown, btnVolUp};
+        }
 
         lv_obj_t* txtBtnPrev;
         lv_obj_t* txtPlayPause;
@@ -70,7 +72,9 @@ namespace Pinetime {
         lv_obj_t* txtVolDown;
         lv_obj_t* txtVolUp;
 
-        lv_obj_t* controlLabels[5];
+        std::array<lv_obj_t*, 5> GetButtonLabels() {
+          return {txtBtnPrev, txtPlayPause, txtBtnNext, txtVolDown, txtVolUp};
+        }
 
         lv_obj_t* txtArtist;
         lv_obj_t* txtTrack;
@@ -96,7 +100,7 @@ namespace Pinetime {
 
         lv_task_t* taskRefresh;
 
-        Utility::DirtyValue<bool> bleState {};
+        Utility::DirtyValue<bool> bleState;
 
         /** Watchapp */
       };
