@@ -236,6 +236,7 @@ void Music::RefreshTrackInfo() {
 
 void Music::UpdateLength() {
   int remaining = std::max(totalLength - currentPosition, 0);
+  int range = std::min(totalLength > 0 ? totalLength : 1, static_cast<int>(std::numeric_limits<int16_t>::max()));
 
   if (totalLength > (99 * 60 * 60)) {
     lv_label_set_text_static(txtCurrentPosition, "Inf");
@@ -243,16 +244,13 @@ void Music::UpdateLength() {
   } else if (totalLength > (99 * 60)) {
     lv_label_set_text_fmt(txtCurrentPosition, "%d:%02d", (currentPosition / (60 * 60)) % 100, ((currentPosition % (60 * 60)) / 60) % 100);
     lv_label_set_text_fmt(txtTrackDuration, "-%d:%02d", (remaining / (60 * 60)) % 100, ((remaining % (60 * 60)) / 60) % 100);
-    // These conversions are narrowing: lv_bar_set_range accepts int16_t args
-    // resolve by normalising?
-    // same for else branch below
-    lv_bar_set_range(barTrackDuration, 0, totalLength > 0 ? totalLength : 1);
-    lv_bar_set_value(barTrackDuration, currentPosition, LV_ANIM_OFF);
+    lv_bar_set_range(barTrackDuration, 0, range);
+    lv_bar_set_value(barTrackDuration, std::min(currentPosition, range), LV_ANIM_OFF);
   } else {
     lv_label_set_text_fmt(txtCurrentPosition, "%d:%02d", (currentPosition / 60) % 100, (currentPosition % 60) % 100);
     lv_label_set_text_fmt(txtTrackDuration, "-%d:%02d", (remaining / 60) % 100, (remaining % 60) % 100);
-    lv_bar_set_range(barTrackDuration, 0, totalLength > 0 ? totalLength : 1);
-    lv_bar_set_value(barTrackDuration, currentPosition, LV_ANIM_OFF);
+    lv_bar_set_range(barTrackDuration, 0, range);
+    lv_bar_set_value(barTrackDuration, std::min(currentPosition, range), LV_ANIM_OFF);
   }
 }
 
