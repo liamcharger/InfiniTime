@@ -59,3 +59,26 @@ const char* Pinetime::Applications::Screens::Symbols::GetCondition(const Pinetim
       return "";
   }
 }
+
+const char* Pinetime::Applications::Screens::Symbols::GetSimpleCondition(const Pinetime::Controllers::SimpleWeatherService::Icons icon) {
+  switch (icon) {
+    case Pinetime::Controllers::SimpleWeatherService::Icons::Sun:
+    case Pinetime::Controllers::SimpleWeatherService::Icons::CloudsSun:
+      return "Clear";
+    case Pinetime::Controllers::SimpleWeatherService::Icons::Clouds:
+    case Pinetime::Controllers::SimpleWeatherService::Icons::BrokenClouds:
+      return "Cloudy";
+    case Pinetime::Controllers::SimpleWeatherService::Icons::CloudShowerHeavy:
+      return "Showers";
+    case Pinetime::Controllers::SimpleWeatherService::Icons::CloudSunRain:
+      return "Rain";
+    case Pinetime::Controllers::SimpleWeatherService::Icons::Thunderstorm:
+      return "Thunder";
+    case Pinetime::Controllers::SimpleWeatherService::Icons::Snow:
+      return "Snow";
+    case Pinetime::Controllers::SimpleWeatherService::Icons::Smog:
+      return "Mist";
+    default:
+      return "";
+  }
+}
