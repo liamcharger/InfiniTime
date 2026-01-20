@@ -8,6 +8,7 @@ namespace Pinetime {
         static constexpr const char* batteryHalf = "\xEF\x89\x82";
         static constexpr const char* heartBeat = "\xEF\x88\x9E";
         static constexpr const char* bluetooth = "\xEF\x8A\x94";
+        static constexpr const char* shieldAlt = "\xEF\x8F\xAD";
         static constexpr const char* plug = "\xEF\x87\xA6";
         static constexpr const char* shoe = "\xEF\x95\x8B";
         static constexpr const char* clock = "\xEF\x80\x97";
@@ -39,11 +40,16 @@ namespace Pinetime {
         static constexpr const char* eye = "\xEF\x81\xAE";
         static constexpr const char* home = "\xEF\x80\x95";
         static constexpr const char* sleep = "\xEE\xBD\x84";
+        static constexpr const char* calculator = "\xEF\x87\xAC";
+        static constexpr const char* backspace = "\xEF\x95\x9A";
 
         // fontawesome_weathericons.c
         // static constexpr const char* sun = "\xEF\x86\x85";
+        static constexpr const char* moon = "\xEF\x86\x86"; // 0xf186
         static constexpr const char* cloudSun = "\xEF\x9B\x84";
+        static constexpr const char* cloudMoon = "\xEF\x9B\x83"; // 0xf6c3
         static constexpr const char* cloudSunRain = "\xEF\x9D\x83";
+        static constexpr const char* cloudMoonRain = "\xEF\x9C\xBC"; // 0xf73c
         static constexpr const char* cloudShowersHeavy = "\xEF\x9D\x80";
         static constexpr const char* smog = "\xEF\x9D\x9F";
         static constexpr const char* cloud = "\xEF\x83\x82";
