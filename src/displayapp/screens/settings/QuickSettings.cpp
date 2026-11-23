@@ -74,11 +74,11 @@ QuickSettings::QuickSettings(Pinetime::Applications::DisplayApp* app,
   lv_obj_add_style(btn2, LV_BTN_PART_MAIN, &btn_style);
   lv_obj_set_size(btn2, buttonWidth, buttonHeight);
   lv_obj_align(btn2, nullptr, LV_ALIGN_IN_TOP_RIGHT, -buttonXOffset, barHeight);
+  lv_obj_set_style_local_bg_color(btn2, LV_BTN_PART_MAIN, LV_STATE_CHECKED, Colors::blue);
 
-  lv_obj_t* lbl_btn;
-  lbl_btn = lv_label_create(btn2, nullptr);
-  lv_obj_set_style_local_text_font(lbl_btn, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_sys_48);
-  lv_label_set_text_static(lbl_btn, Symbols::flashlight);
+  btn2_lvl = lv_label_create(btn2, nullptr);
+  lv_obj_set_style_local_text_font(btn2_lvl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_sys_48);
+  UpdateBluetoothButton();
 
   btn3 = lv_btn_create(lv_scr_act(), nullptr);
   btn3->user_data = this;
@@ -110,7 +110,7 @@ QuickSettings::QuickSettings(Pinetime::Applications::DisplayApp* app,
   lv_obj_set_size(btn4, buttonWidth, buttonHeight);
   lv_obj_align(btn4, nullptr, LV_ALIGN_IN_BOTTOM_RIGHT, -buttonXOffset, 0);
 
-  lbl_btn = lv_label_create(btn4, nullptr);
+  lv_obj_t* lbl_btn = lv_label_create(btn4, nullptr);
   lv_obj_set_style_local_text_font(lbl_btn, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_sys_48);
   lv_label_set_text_static(lbl_btn, Symbols::settings);
 
@@ -133,9 +133,21 @@ void QuickSettings::Refresh() {
   }
 }
 
+void QuickSettings::UpdateBluetoothButton() {
+  if (settingsController.GetBleRadioEnabled()) {
+    lv_label_set_text_static(btn2_lvl, Symbols::bluetoothOn);
+    lv_obj_set_state(btn2, LV_STATE_CHECKED);
+  } else {
+    lv_label_set_text_static(btn2_lvl, Symbols::bluetoothOff);
+    lv_obj_set_state(btn2, LV_STATE_DEFAULT);
+  }
+}
+
 void QuickSettings::OnButtonEvent(lv_obj_t* object) {
   if (object == btn2) {
-    app->StartApp(Apps::FlashLight, DisplayApp::FullRefreshDirections::Up);
+    settingsController.SetBleRadioEnabled(!settingsController.GetBleRadioEnabled());
+    app->PushMessage(Display::Messages::BleRadioEnableToggle);
+    UpdateBluetoothButton();
   } else if (object == btn1) {
 
     brightness.Step();
