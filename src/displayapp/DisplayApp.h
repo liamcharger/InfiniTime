@@ -133,7 +133,8 @@ namespace Pinetime {
       Apps nextApp = Apps::None;
       DisplayApp::FullRefreshDirections nextDirection;
       System::BootErrors bootError;
-      void ApplyBrightness();
+      static constexpr uint16_t wakeFadeDurationMs = 100;
+      void ApplyBrightness(bool fade = false);
 
       static constexpr size_t returnAppStackSize = 10;
       Utility::StaticStack<Apps, returnAppStackSize> returnAppStack;

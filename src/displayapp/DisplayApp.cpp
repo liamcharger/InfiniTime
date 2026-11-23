@@ -268,7 +268,7 @@ void DisplayApp::Refresh() {
       if (!systemTask->IsSleepDisabled() && IsPastDimTime()) {
         if (!isDimmed) {
           isDimmed = true;
-          brightnessController.Set(Controllers::BrightnessController::Levels::Low);
+          brightnessController.FadeTo(Controllers::BrightnessController::Levels::Low);
         }
         if (IsPastSleepTime() && uxQueueMessagesWaiting(msgQueue) == 0) {
           PushMessageToSystemTask(System::Messages::GoToSleep);
@@ -287,7 +287,7 @@ void DisplayApp::Refresh() {
         }
       } else if (isDimmed) {
         isDimmed = false;
-        ApplyBrightness();
+        ApplyBrightness(true);
       }
       break;
     default:
@@ -309,15 +309,10 @@ void DisplayApp::Refresh() {
         if (state != States::Running || !systemTask->IsSleeping()) {
           break;
         }
-        while (brightnessController.Level() != Controllers::BrightnessController::Levels::Low) {
-          brightnessController.Lower();
-          vTaskDelay(100);
-        }
-        // Turn brightness down (or set to AlwaysOn mode)
         if (msg == Messages::GoToAOD) {
-          brightnessController.Set(Controllers::BrightnessController::Levels::AlwaysOn);
+          brightnessController.FadeTo(Controllers::BrightnessController::Levels::AlwaysOn);
         } else {
-          brightnessController.Set(Controllers::BrightnessController::Levels::Off);
+          brightnessController.FadeTo(Controllers::BrightnessController::Levels::Off);
         }
         // Since the active screen is not really an app, go back to Clock.
         if (currentApp == Apps::Launcher || currentApp == Apps::Notifications || currentApp == Apps::NotificationsPreview ||
@@ -362,7 +357,7 @@ void DisplayApp::Refresh() {
           lcd.Wakeup();
         }
         lv_disp_trig_activity(nullptr);
-        ApplyBrightness();
+        ApplyBrightness(true);
         state = States::Running;
         break;
       case Messages::UpdateBleConnection:
@@ -734,11 +729,15 @@ void DisplayApp::Register(Pinetime::Controllers::NavigationService* NavigationSe
   this->controllers.navigationService = NavigationService;
 }
 
-void DisplayApp::ApplyBrightness() {
+void DisplayApp::ApplyBrightness(bool fade) {
   auto brightness = settingsController.GetBrightness();
   if (brightness != Controllers::BrightnessController::Levels::Low && brightness != Controllers::BrightnessController::Levels::Medium &&
       brightness != Controllers::BrightnessController::Levels::High) {
     brightness = Controllers::BrightnessController::Levels::High;
   }
-  brightnessController.Set(brightness);
+  if (fade) {
+    brightnessController.FadeTo(brightness, wakeFadeDurationMs);
+  } else {
+    brightnessController.Set(brightness);
+  }
 }
