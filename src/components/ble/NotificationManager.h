@@ -42,6 +42,8 @@ namespace Pinetime {
         Notification();
         Notification(const char* message, uint8_t size);
         Notification(const struct os_mbuf* om, int off, uint8_t size);
+        uint32_t ancsUid = 0;
+
         const char* Message() const;
         const char* Title() const;
 
