@@ -238,7 +238,12 @@ void Music::UpdateLength() {
   int remaining = std::max(totalLength - currentPosition, 0);
   int range = std::min(totalLength > 0 ? totalLength : 1, static_cast<int>(std::numeric_limits<int16_t>::max()));
 
-  if (totalLength > (99 * 60 * 60)) {
+  if (totalLength <= 0) {
+    lv_label_set_text_static(txtCurrentPosition, "--:--");
+    lv_label_set_text_static(txtTrackDuration, "--:--");
+    lv_bar_set_range(barTrackDuration, 0, 1000);
+    lv_bar_set_value(barTrackDuration, 0, LV_ANIM_OFF);
+  } else if (totalLength > (99 * 60 * 60)) {
     lv_label_set_text_static(txtCurrentPosition, "Inf");
     lv_label_set_text_static(txtTrackDuration, "Inf");
   } else if (totalLength > (99 * 60)) {
