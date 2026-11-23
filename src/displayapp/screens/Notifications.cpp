@@ -144,25 +144,9 @@ void Notifications::DismissToBlack() {
   dismissingNotification = true;
 }
 
-void Notifications::OnPreviewDismiss() {
-  notificationManager.Dismiss(currentId);
-  if (timeoutLine != nullptr) {
-    lv_obj_del(timeoutLine);
-    timeoutLine = nullptr;
-  }
-  DismissToBlack();
-}
-
 bool Notifications::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
   if (mode == Modes::Preview) {
-    if (event == TouchEvents::Tap || event == TouchEvents::SwipeDown) {
-      OnPreviewInteraction();
-    } else if (event == Pinetime::Applications::TouchEvents::SwipeRight) {
-      OnPreviewDismiss();
-      return true;
-    } else {
-      return false;
-    }
+    OnPreviewInteraction();
   }
 
   switch (event) {

@@ -237,6 +237,7 @@ void SystemTask::Work() {
           break;
         case Messages::BleConnected:
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
+          nimbleController.music().event(Controllers::MusicService::EVENT_MUSIC_OPEN);
           isBleDiscoveryTimerRunning = true;
           bleDiscoveryTimer = 5;
           break;

@@ -176,3 +176,12 @@ void QuickSettings::OnButtonEvent(lv_obj_t* object) {
     app->StartApp(Apps::Settings, DisplayApp::FullRefreshDirections::Up);
   }
 }
+
+bool QuickSettings::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
+  if (event == TouchEvents::SwipeUp) {
+    settingsController.SetSettingsMenu(0);
+    app->StartApp(Apps::Settings, DisplayApp::FullRefreshDirections::Up);
+    return true;
+  }
+  return false;
+}

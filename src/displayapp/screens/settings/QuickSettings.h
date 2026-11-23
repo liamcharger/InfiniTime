@@ -31,6 +31,8 @@ namespace Pinetime {
 
         void OnButtonEvent(lv_obj_t* object);
 
+        bool OnTouchEvent(TouchEvents event) override;
+
         void Refresh() override;
 
       private:
