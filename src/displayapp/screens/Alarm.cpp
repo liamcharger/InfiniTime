@@ -61,8 +61,10 @@ static void SwitchEventHandler(lv_obj_t* obj, lv_event_t event) {
 Alarm::Alarm(Controllers::AlarmController& alarmController,
              Controllers::Settings::ClockType clockType,
              System::SystemTask& systemTask,
-             Controllers::MotorController& motorController)
-  : alarmController {alarmController}, wakeLock(systemTask), motorController {motorController}, clockType {clockType} {
+             Controllers::MotorController& motorController,
+             Controllers::DateTime& dateTimeController)
+  : dateTimeController {dateTimeController},
+    alarmController {alarmController}, wakeLock(systemTask), motorController {motorController}, clockType {clockType} {
 
   // Decide which UI to show
   if (alarmController.IsAlerting()) {
@@ -215,6 +217,18 @@ void Alarm::CreateAlarmConfigUI(uint8_t alarmIndex) {
   lv_obj_t* txtBack = lv_label_create(btnBack, nullptr);
   lv_label_set_text_static(txtBack, "Back");
 
+  btnCurrentTime = lv_btn_create(lv_scr_act(), nullptr);
+  btnCurrentTime->user_data = this;
+  lv_obj_set_event_cb(btnCurrentTime, btnEventHandler);
+  lv_obj_set_size(btnCurrentTime, 50, 50);
+  lv_obj_align(btnCurrentTime, lv_scr_act(), LV_ALIGN_IN_TOP_MID, 0, 135);
+  lv_obj_set_style_local_bg_color(btnCurrentTime, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, bgColor);
+  lv_obj_set_style_local_border_width(btnCurrentTime, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, 4);
+  lv_obj_set_style_local_border_color(btnCurrentTime, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+
+  lv_obj_t* btnClock = lv_label_create(btnCurrentTime, nullptr);
+  lv_label_set_text_static(btnClock, Symbols::clock);
+
   UpdateAlarmTime();
 }
 
@@ -277,6 +291,10 @@ void Alarm::OnButtonEvent(lv_obj_t* obj, lv_event_t event) {
       ShowInfo();
       return;
     }
+    if (obj == btnCurrentTime) {
+      SetCurrentTime();
+      return;
+    }
     if (obj == btnMessage) {
       HideInfo();
       return;
@@ -330,6 +348,7 @@ void Alarm::SetAlerting() {
   lv_obj_set_hidden(btnBack, true);
   lv_obj_set_hidden(btnRecur, true);
   lv_obj_set_hidden(btnInfo, true);
+  lv_obj_set_hidden(btnCurrentTime, true);
   hourCounter.HideControls();
   minuteCounter.HideControls();
   lv_obj_set_hidden(btnStop, false);
@@ -418,4 +437,10 @@ void Alarm::ToggleRecurrence() {
       alarmController.SetRecurrence(selectedAlarmIndex, AlarmController::RecurType::None);
   }
   SetRecurButtonState();
+}
+
+void Alarm::SetCurrentTime() {
+  hourCounter.SetValue(dateTimeController.Hours());
+  minuteCounter.SetValue(dateTimeController.Minutes());
+  OnValueChanged();
 }
