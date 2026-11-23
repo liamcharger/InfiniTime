@@ -10,6 +10,7 @@
 using namespace Pinetime::Applications::Screens;
 extern lv_font_t jetbrains_mono_extrabold_compressed;
 extern lv_font_t jetbrains_mono_bold_20;
+extern lv_font_t notification_icons;
 
 Notifications::Notifications(DisplayApp* app,
                              Pinetime::Controllers::NotificationManager& notificationManager,
@@ -38,7 +39,8 @@ Notifications::Notifications(DisplayApp* app,
                                                      alertNotificationService,
                                                      ancsClient,
                                                      motorController,
-                                                     notification.ancsUid);
+                                                     notification.ancsUid,
+                                                     notification.icon);
     validDisplay = true;
   } else {
     currentItem = std::make_unique<NotificationItem>(alertNotificationService, ancsClient, motorController);
@@ -115,7 +117,8 @@ void Notifications::Refresh() {
                                                        alertNotificationService,
                                                        ancsClient,
                                                        motorController,
-                                                       notification.ancsUid);
+                                                       notification.ancsUid,
+                                                       notification.icon);
     } else {
       running = false;
     }
@@ -194,7 +197,8 @@ bool Notifications::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
                                                        alertNotificationService,
                                                        ancsClient,
                                                        motorController,
-                                                       previousNotification.ancsUid);
+                                                       previousNotification.ancsUid,
+                                                       previousNotification.icon);
     }
       return true;
     case Pinetime::Applications::TouchEvents::SwipeUp: {
@@ -223,7 +227,8 @@ bool Notifications::OnTouchEvent(Pinetime::Applications::TouchEvents event) {
                                                        alertNotificationService,
                                                        ancsClient,
                                                        motorController,
-                                                       nextNotification.ancsUid);
+                                                       nextNotification.ancsUid,
+                                                       nextNotification.icon);
     }
       return true;
     default:
@@ -249,7 +254,8 @@ Notifications::NotificationItem::NotificationItem(Pinetime::Controllers::AlertNo
                      alertNotificationService,
                      ancsClient,
                      motorController,
-                     0) {
+                     0,
+                     nullptr) {
 }
 
 Notifications::NotificationItem::NotificationItem(const char* title,
@@ -260,7 +266,8 @@ Notifications::NotificationItem::NotificationItem(const char* title,
                                                   Pinetime::Controllers::AlertNotificationService& alertNotificationService,
                                                   Pinetime::Controllers::AppleNotificationCenterClient& ancsClient,
                                                   Pinetime::Controllers::MotorController& motorController,
-                                                  uint32_t ancsUid)
+                                                  uint32_t ancsUid,
+                                                  const char* icon)
   : alertNotificationService {alertNotificationService}, ancsClient {ancsClient}, motorController {motorController} {
   this->ancsUid = ancsUid;
 
@@ -301,8 +308,22 @@ Notifications::NotificationItem::NotificationItem(const char* title,
     lv_label_refr_text(alert_type);
   }
   lv_label_set_long_mode(alert_type, LV_LABEL_LONG_SROLL_CIRC);
-  lv_obj_set_width(alert_type, 180);
-  lv_obj_align(alert_type, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 16);
+
+  // App logo before the title, from Titus Kendzorra's InfiniBros fork (lil-watch branches)
+  if (icon != nullptr) {
+    lv_obj_t* alert_icon = lv_label_create(container, nullptr);
+    lv_obj_set_style_local_text_font(alert_icon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &notification_icons);
+    lv_obj_set_style_local_text_color(alert_icon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, Colors::orange);
+    lv_label_set_text_static(alert_icon, icon);
+    lv_obj_align(alert_icon, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 16);
+
+    constexpr lv_coord_t iconGap = 6;
+    lv_obj_set_width(alert_type, 180 - lv_obj_get_width(alert_icon) - iconGap);
+    lv_obj_align(alert_type, alert_icon, LV_ALIGN_OUT_RIGHT_MID, iconGap, 0);
+  } else {
+    lv_obj_set_width(alert_type, 180);
+    lv_obj_align(alert_type, nullptr, LV_ALIGN_IN_TOP_LEFT, 0, 16);
+  }
 
   lv_obj_t* alert_subject = lv_label_create(subject_container, nullptr);
   lv_label_set_long_mode(alert_subject, LV_LABEL_LONG_BREAK);

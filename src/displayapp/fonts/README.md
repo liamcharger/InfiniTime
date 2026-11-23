@@ -1,14 +1,14 @@
 # Fonts
 
 - [Jetbrains Mono](https://www.jetbrains.com/lp/mono/)
-- [Font Awesome](https://fontawesome.com/v6/search?m=free)
+- [Font Awesome](https://fontawesome.com/v7/search?ic=free-collection)
 - [Open Sans Light](https://fonts.google.com/specimen/Open+Sans)
 - [Material Symbols](https://fonts.google.com/icons)
 
 ### How to add new symbols:
 
 - Browse the cheat sheets and pick symbols
-  - [Font Awesome](https://fontawesome.com/v5/cheatsheet/free/solid)
+  - [Font Awesome](https://fontawesome.com/v7/search?ic=free-collection)
   - [Material Symbols](https://fonts.google.com/icons)
 - For each symbol, add its hex code (0xf641 for the 'Ad' icon, for example) to the *Range* list in the `fonts.json` file
 - Convert this hex value into a UTF-8 code

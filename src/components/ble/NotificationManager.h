@@ -43,6 +43,10 @@ namespace Pinetime {
         Notification(const char* message, uint8_t size);
         Notification(const struct os_mbuf* om, int off, uint8_t size);
         uint32_t ancsUid = 0;
+        // App logo shown in the notification header, from the ANCS app identifier. Points at a
+        // static Symbols string, so it costs one pointer per notification.
+        // Based on Titus Kendzorra's InfiniBros fork (lil-watch branches), which stores the bundle ID as a std::string instead.
+        const char* icon = nullptr;
 
         const char* Message() const;
         const char* Title() const;

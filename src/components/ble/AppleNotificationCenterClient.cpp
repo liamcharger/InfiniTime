@@ -1,9 +1,12 @@
 #include "components/ble/AppleNotificationCenterClient.h"
 #include "components/ble/NotificationManager.h"
 #include "systemtask/SystemTask.h"
+#include "displayapp/screens/Symbols.h"
 #include <algorithm>
+#include <cstring>
 
 using namespace Pinetime::Controllers;
+namespace Symbols = Pinetime::Applications::Screens::Symbols;
 
 int OnDiscoveryEventCallback(uint16_t conn_handle, const struct ble_gatt_error* error, const struct ble_gatt_svc* service, void* arg) {
   auto client = static_cast<AppleNotificationCenterClient*>(arg);
@@ -182,6 +185,79 @@ void AppleNotificationCenterClient::MaybeFinishDiscovery(uint16_t connectionHand
   }
 }
 
+// App list taken from Titus Kendzorra's InfiniBros fork (AppIdToEmoji in the lil-watch branches). His uses a
+// std::unordered_map, which allocates on the heap. This uses a flat table in flash instead.
+// Dropped from his list: Signal, Reddit, X, TikTok, Teams, Duolingo, ChatGPT, and his own banking, gym and birthday apps.
+const char* AppleNotificationCenterClient::IconForAppId(const char* appId) {
+  struct AppIcon {
+    const char* appId;
+    const char* icon;
+  };
+
+  static constexpr AppIcon appIcons[] = {
+    {"net.whatsapp.WhatsApp", Symbols::whatsappLogo},
+    {"com.burbn.instagram", Symbols::instagramLogo},
+    {"com.hammerandchisel.discord", Symbols::discordLogo},
+    {"com.google.ios.youtube", Symbols::youtubeLogo},
+    {"com.toyopagroup.picaboo", Symbols::snapchatLogo},
+    {"com.github.stormbreaker.prod", Symbols::githubLogo},
+    {"com.apple.podcasts", Symbols::podcastsLogo},
+    {"com.apple.MobileSMS", Symbols::messagesLogo},
+    {"com.apple.reminders", Symbols::remindersLogo},
+    {"com.apple.shortcuts", Symbols::shortcutsLogo},
+    {"com.apple.Music", Symbols::musicLogo},
+    {"com.apple.mobilephone", Symbols::phoneLogo},
+    {"com.apple.Passbook", Symbols::walletLogo},
+    {"com.apple.mobilemail", Symbols::mailLogo},
+  };
+
+  if (appId == nullptr || appId[0] == '\0') {
+    return nullptr;
+  }
+
+  for (const auto& entry : appIcons) {
+    if (std::strcmp(entry.appId, appId) == 0) {
+      return entry.icon;
+    }
+  }
+
+  // Any other Apple app gets the Apple logo
+  if (std::strncmp(appId, "com.apple.", 10) == 0) {
+    return Symbols::appleLogo;
+  }
+
+  return nullptr;
+}
+
+// Emoji list taken from Titus Kendzorra's InfiniBros fork (MapEmojiToSymbol in the lil-watch branches)
+const char* AppleNotificationCenterClient::SymbolForEmoji(uint32_t codepoint) {
+  struct EmojiSymbol {
+    uint32_t codepoint;
+    const char* symbol;
+  };
+
+  static constexpr EmojiSymbol emojiSymbols[] = {
+    {0x1F44D, Symbols::thumbsUp},     {0x1F44E, Symbols::thumbsDown},  {0x1F642, Symbols::smile},         {0x1F62B, Symbols::tired},
+    {0x1F62E, Symbols::openMouth},    {0x1F609, Symbols::wink},        {0x1F60A, Symbols::grin},          {0x1F622, Symbols::sad},
+    {0x1F62D, Symbols::cry},          {0x1F644, Symbols::rollingEyes}, {0x1F636, Symbols::noMouth},       {0x1F610, Symbols::neutralFace},
+    {0x1F606, Symbols::grinSquint},   {0x1F604, Symbols::grinSmile},   {0x1F600, Symbols::grinOpenMouth}, {0x1F618, Symbols::blowingKiss},
+    {0x1F619, Symbols::kissGrin},     {0x1F617, Symbols::kiss},        {0x1F603, Symbols::grinWide},      {0x1F61C, Symbols::winkTongue},
+    {0x1F61D, Symbols::squintTongue}, {0x1F61B, Symbols::grinTongue},  {0x1F602, Symbols::laugh},         {0x1F929, Symbols::grinStars},
+    {0x1F923, Symbols::rofl},         {0x1F60D, Symbols::heartEyes},   {0x1F605, Symbols::sweatSmile},    {0x1F62C, Symbols::grimace},
+    {0x1F641, Symbols::slightFrown},  {0x2639, Symbols::frown},        {0x1F633, Symbols::flushed},       {0x1F635, Symbols::deadEyes},
+    {0x1F620, Symbols::angry},        {0x1F621, Symbols::angry},       {0x1F92C, Symbols::angry},         {0x2764, Symbols::heartEmoji},
+    {0x1F64F, Symbols::prayingHands}, {0x1F91D, Symbols::handshake},   {0x270C, Symbols::peaceSign},      {0x1F595, Symbols::middleFinger},
+    {0x1F4F7, Symbols::camera},       {0x1F4F9, Symbols::videoCam},    {0x1F3A4, Symbols::microphone},    {0x1F525, Symbols::flame},
+  };
+
+  for (const auto& entry : emojiSymbols) {
+    if (entry.codepoint == codepoint) {
+      return entry.symbol;
+    }
+  }
+  return nullptr;
+}
+
 void AppleNotificationCenterClient::OnNotification(ble_gap_event* event) {
   if (event->notify_rx.attr_handle == notificationSourceHandle || event->notify_rx.attr_handle == notificationSourceDescriptorHandle) {
     NRF_LOG_INFO("ANCS Notification received");
@@ -240,7 +316,7 @@ void AppleNotificationCenterClient::OnNotification(ble_gap_event* event) {
     uint8_t titleSize = maxTitleSize + 4;
     uint8_t subTitleSize = maxSubtitleSize + 4;
     uint8_t messageSize = maxMessageSize + 4;
-    BYTE request[14];
+    BYTE request[15];
     request[0] = 0x00; // Command ID: Get Notification Attributes
     request[1] = static_cast<uint8_t>(ancsNotif.uuid & 0xFF);
     request[2] = static_cast<uint8_t>((ancsNotif.uuid >> 8) & 0xFF);
@@ -256,6 +332,9 @@ void AppleNotificationCenterClient::OnNotification(ble_gap_event* event) {
     request[11] = 0x03; // Attribute ID: Message
     request[12] = static_cast<uint8_t>(messageSize & 0xFF);
     request[13] = static_cast<uint8_t>((messageSize >> 8) & 0xFF);
+    // Asking for the app identifier comes from Titus Kendzorra's InfiniBros fork. Unlike title, subtitle
+    // and message, it takes no max length parameter.
+    request[14] = 0x00; // Attribute ID: App Identifier
 
     ble_gattc_write_flat(event->notify_rx.conn_handle, controlPointHandle, request, sizeof(request), OnControlPointWriteCallback, this);
   } else if (event->notify_rx.attr_handle == dataSourceHandle || event->notify_rx.attr_handle == dataSourceDescriptorHandle) {
@@ -268,6 +347,17 @@ void AppleNotificationCenterClient::OnNotification(ble_gap_event* event) {
     os_mbuf_copydata(event->notify_rx.om, 6, 2, &titleSize);
     os_mbuf_copydata(event->notify_rx.om, 8 + titleSize + 1, 2, &subTitleSize);
     os_mbuf_copydata(event->notify_rx.om, 8 + titleSize + 1 + 2 + subTitleSize + 1, 2, &messageSize);
+
+    // The app identifier comes after the message. It can be missing, e.g. when the phone splits a long
+    // response across several packets, and then the notification just has no logo.
+    const uint16_t appIdSizeOffset = 8 + titleSize + 1 + 2 + subTitleSize + 1 + 2 + messageSize + 1;
+    std::array<char, maxAppIdSize + 1> appId {};
+    uint16_t appIdSize = 0;
+    if (os_mbuf_copydata(event->notify_rx.om, appIdSizeOffset, 2, &appIdSize) == 0 && appIdSize <= maxAppIdSize) {
+      if (os_mbuf_copydata(event->notify_rx.om, appIdSizeOffset + 2, appIdSize, appId.data()) != 0) {
+        appId[0] = '\0';
+      }
+    }
 
     AncsNotification ancsNotif;
     ancsNotif.uuid = 0;
@@ -369,6 +459,7 @@ void AppleNotificationCenterClient::OnNotification(ble_gap_event* event) {
     const auto bufferSize = static_cast<uint8_t>(std::min(notifStr.size() + 1, buffer.size()));
     NotificationManager::Notification notif(buffer.data(), bufferSize);
     notif.ancsUid = notificationUid;
+    notif.icon = IconForAppId(appId.data());
     if (incomingCall) {
       notif.category = Pinetime::Controllers::NotificationManager::Categories::IncomingCall;
     } else {
@@ -469,7 +560,8 @@ void AppleNotificationCenterClient::Discover(uint16_t connectionHandle, std::fun
 void AppleNotificationCenterClient::DebugNotification(const char* msg) const {
   NRF_LOG_INFO("[ANCS DEBUG] %s", msg);
 
-  NotificationManager::Notification notif(msg, static_cast<uint8_t>(std::min<size_t>(std::strlen(msg) + 1, NotificationManager::MessageSize)));
+  NotificationManager::Notification notif(msg,
+                                          static_cast<uint8_t>(std::min<size_t>(std::strlen(msg) + 1, NotificationManager::MessageSize)));
   notif.category = Pinetime::Controllers::NotificationManager::Categories::SimpleAlert;
   notificationManager.Push(std::move(notif));
 
@@ -484,7 +576,21 @@ std::string AppleNotificationCenterClient::DecodeUtf8String(os_mbuf* om, uint16_
     // Check if the codepoint falls into the specified font ranges or is explicitly listed
     return (codepoint >= 0x20 && codepoint <= 0x7E) ||   // Printable ASCII
            (codepoint >= 0x410 && codepoint <= 0x44F) || // Cyrillic
-           codepoint == 0xB0;
+           codepoint == 0xB0 ||
+           // Extra characters taken from Titus Kendzorra's InfiniBros fork. Keep in sync with fonts.json.
+           codepoint == 0xC4 || codepoint == 0xD6 || codepoint == 0xDC || codepoint == 0xDF || // Ä Ö Ü ß
+           codepoint == 0xE4 || codepoint == 0xF6 || codepoint == 0xFC ||                      // ä ö ü
+           codepoint == 0x20AC ||                                                              // €
+           codepoint == 0x2018 || codepoint == 0x2019 ||                                       // ‘ ’ (iOS smart apostrophes)
+           codepoint == 0x201C || codepoint == 0x201D || codepoint == 0x201E ||                // “ ” „
+           codepoint == 0x2022 || codepoint == 0x2026;                                         // • …
+  };
+
+  // Invisible characters that change how the emoji before them looks. Drop them instead of showing �.
+  auto isEmojiModifier = [](uint32_t codepoint) -> bool {
+    return codepoint == 0xFE0F ||                          // Variation selector, e.g. the one after ❤
+           codepoint == 0x200D ||                          // Zero-width joiner
+           (codepoint >= 0x1F3FB && codepoint <= 0x1F3FF); // Skin tones
   };
 
   for (uint16_t i = 0; i < size;) {
@@ -545,8 +651,13 @@ std::string AppleNotificationCenterClient::DecodeUtf8String(os_mbuf* om, uint16_
         }
       }
 
+      const char* emojiSymbol = validSequence ? SymbolForEmoji(codepoint) : nullptr;
       if (validSequence && isInFontDefinition(codepoint)) {
         decoded.append(utf8Char); // Append valid UTF-8 character
+      } else if (emojiSymbol != nullptr) {
+        decoded.append(emojiSymbol); // Emoji drawn with a Font Awesome glyph
+      } else if (validSequence && isEmojiModifier(codepoint)) {
+        // Skip
       } else {
         decoded.append("�"); // Replace unsupported
       }

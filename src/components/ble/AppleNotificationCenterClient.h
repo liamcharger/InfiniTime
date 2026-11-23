@@ -108,6 +108,13 @@ namespace Pinetime {
 
       std::string DecodeUtf8String(os_mbuf* om, uint16_t size, uint16_t offset);
 
+      // Logo and emoji lookups taken from Titus Kendzorra's InfiniBros fork (lil-watch branches)
+      static const char* IconForAppId(const char* appId);
+      static const char* SymbolForEmoji(uint32_t codepoint);
+
+      // Longest bundle ID we read. Longer ones are skipped and get no logo.
+      static constexpr uint8_t maxAppIdSize {63};
+
       bool subscriptionsDone = false;
       uint16_t ancsStartHandle {0};
       uint16_t ancsEndHandle {0};
