@@ -48,7 +48,8 @@ namespace Pinetime {
                            Pinetime::Controllers::AlertNotificationService& alertNotificationService,
                            Pinetime::Controllers::AppleNotificationCenterClient& ancsClient,
                            Pinetime::Controllers::MotorController& motorController,
-                           uint32_t ancsUid);
+                           uint32_t ancsUid,
+                           const char* icon);
           ~NotificationItem();
 
           bool IsRunning() const {
