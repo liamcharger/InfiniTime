@@ -13,6 +13,7 @@ namespace Pinetime {
       void Init();
 
       void Set(Levels level);
+      void FadeTo(Levels level, uint16_t durationMs = defaultFadeDurationMs);
       Levels Level() const;
       void Lower();
       void Higher();
@@ -21,8 +22,11 @@ namespace Pinetime {
       const char* GetIcon();
       const char* ToString();
 
+      static constexpr uint16_t defaultFadeDurationMs = 200;
+
     private:
       Levels level = Levels::High;
+      uint16_t currentRawBrightness = 0;
       static constexpr uint8_t UNSET = UINT8_MAX;
       uint8_t lastPin = UNSET;
       // Maximum time (μs) it takes for the RTC to fully stop
@@ -41,7 +45,10 @@ namespace Pinetime {
       static constexpr nrf_ppi_channel_t ppiBacklightOn = NRF_PPI_CHANNEL1;
       static constexpr nrf_ppi_channel_t ppiBacklightOff = NRF_PPI_CHANNEL2;
 
+      static constexpr uint8_t fadeStepPeriodMs = 8;
+
       void ApplyBrightness(uint16_t val);
+      static uint16_t RawBrightness(Levels level);
     };
   }
 }

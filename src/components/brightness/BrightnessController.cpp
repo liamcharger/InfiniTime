@@ -3,6 +3,8 @@
 #include "displayapp/screens/Symbols.h"
 #include "drivers/PinMap.h"
 #include <libraries/delay/nrf_delay.h>
+#include <FreeRTOS.h>
+#include <task.h>
 using namespace Pinetime::Controllers;
 
 namespace {
@@ -37,6 +39,7 @@ void BrightnessController::ApplyBrightness(uint16_t rawBrightness) {
   // E.g 2.5*timerPeriod corresponds to medium brightness with 50% PWM on the high pin
   // Note: Raw brightness does not necessarily correspond to a linear perceived brightness
 
+  currentRawBrightness = rawBrightness;
   uint8_t pin;
   if (rawBrightness > 2 * timerPeriod) {
     rawBrightness -= 2 * timerPeriod;
@@ -116,38 +119,50 @@ void BrightnessController::ApplyBrightness(uint16_t rawBrightness) {
   }
 }
 
-void BrightnessController::Set(BrightnessController::Levels level) {
-  this->level = level;
+uint16_t BrightnessController::RawBrightness(Levels level) {
   switch (level) {
     default:
     case Levels::High:
-      ApplyBrightness(3 * timerPeriod);
-      break;
+      return 3 * timerPeriod;
     case Levels::Medium:
-      ApplyBrightness(2 * timerPeriod);
-      break;
+      return 2 * timerPeriod;
     case Levels::Low:
-      ApplyBrightness(timerPeriod);
-      break;
+      return timerPeriod;
     case Levels::AlwaysOn:
-      ApplyBrightness(timerPeriod / 10);
-      break;
+      return timerPeriod / 10;
     case Levels::Off:
-      ApplyBrightness(0);
-      break;
+      return 0;
   }
+}
+
+void BrightnessController::Set(BrightnessController::Levels level) {
+  this->level = level;
+  ApplyBrightness(RawBrightness(level));
+}
+
+void BrightnessController::FadeTo(Levels level, uint16_t durationMs) {
+  this->level = level;
+  const int32_t start = currentRawBrightness;
+  const int32_t target = RawBrightness(level);
+  const uint16_t steps = durationMs / fadeStepPeriodMs;
+
+  for (uint16_t i = 1; i < steps && start != target; i++) {
+    ApplyBrightness(static_cast<uint16_t>(start + (target - start) * i / steps));
+    vTaskDelay(pdMS_TO_TICKS(fadeStepPeriodMs));
+  }
+  ApplyBrightness(target);
 }
 
 void BrightnessController::Lower() {
   switch (level) {
     case Levels::High:
-      Set(Levels::Medium);
+      FadeTo(Levels::Medium);
       break;
     case Levels::Medium:
-      Set(Levels::Low);
+      FadeTo(Levels::Low);
       break;
     case Levels::Low:
-      Set(Levels::Off);
+      FadeTo(Levels::Off);
       break;
     default:
       break;
@@ -157,13 +172,13 @@ void BrightnessController::Lower() {
 void BrightnessController::Higher() {
   switch (level) {
     case Levels::Off:
-      Set(Levels::Low);
+      FadeTo(Levels::Low);
       break;
     case Levels::Low:
-      Set(Levels::Medium);
+      FadeTo(Levels::Medium);
       break;
     case Levels::Medium:
-      Set(Levels::High);
+      FadeTo(Levels::High);
       break;
     default:
       break;
@@ -177,13 +192,13 @@ BrightnessController::Levels BrightnessController::Level() const {
 void BrightnessController::Step() {
   switch (level) {
     case Levels::Low:
-      Set(Levels::Medium);
+      FadeTo(Levels::Medium);
       break;
     case Levels::Medium:
-      Set(Levels::High);
+      FadeTo(Levels::High);
       break;
     case Levels::High:
-      Set(Levels::Low);
+      FadeTo(Levels::Low);
       break;
     default:
       break;
